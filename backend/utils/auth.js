@@ -7,9 +7,14 @@ const { secret, expiresIn } = jwtConfig;
 
 // Sends a JWT Cookie
 const setTokenCookie = (res, user) => {
-    // Create the token.
+  const safeUser = {
+    id: user.id,
+    email: user.email,
+    username: user.username
+  }
+  // Create the token.
     const token = jwt.sign(
-      { data: user.toSafeObject() }, // Assuming you have a method toSafeObject in User model
+      { data: safeUser }, 
       secret,
       { expiresIn: parseInt(expiresIn) } // Convert expiresIn to an integer
     );
