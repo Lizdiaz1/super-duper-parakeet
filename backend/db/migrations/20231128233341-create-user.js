@@ -30,11 +30,11 @@ module.exports = {
       },
       firstName: {  // Adding the firstName attribute
         type: Sequelize.STRING,
-        allowNull: false
+        allowNull: true
       },
       lastName: {   // Adding the lastName attribute
         type: Sequelize.STRING,
-        allowNull: false
+        allowNull: true
       },
       createdAt: {
         allowNull: false,
