@@ -3,10 +3,16 @@ const { Model, Validator } = require('sequelize');
 
 module.exports = (sequelize, DataTypes) => {
   class User extends Model {
-    static associate(models) {
-      // define association here
-    }
-  };
+      // Method to get a safe, public representation of the user
+      toSafeObject() {
+        const { id, username, email, firstName, lastName } = this; // Only safe fields
+        return { id, username, email, firstName, lastName };
+      }
+
+      static associate(models) {
+        // define association here
+      }
+    };
 
   User.init({
     username: {
