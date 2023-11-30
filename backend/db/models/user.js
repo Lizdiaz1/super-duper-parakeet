@@ -1,7 +1,7 @@
 'use strict';
 const { Model, Validator } = require('sequelize');
 const { email, username, password, firstName, lastName } = req.body;
-const user = await User.create({ email, username, hashedPassword, firstName, lastName });
+
 
 module.exports = (sequelize, DataTypes) => {
   class User extends Model {
