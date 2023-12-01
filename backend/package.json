@@ -34,8 +34,6 @@
     "sequelize": "^6.35.1"
   },
   "devDependencies": {
-    "dotenv": "^16.3.1",
-    "dotenv-cli": "^7.3.0",
     "nodemon": "^3.0.1",
     "sqlite3": "^5.1.6"
   }
