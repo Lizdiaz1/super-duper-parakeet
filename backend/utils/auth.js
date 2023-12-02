@@ -14,7 +14,7 @@ const setTokenCookie = (res, user) => {
   }
   // Create the token.
     const token = jwt.sign(
-      { data: safeUser }, 
+      { data: safeUser },
       secret,
       { expiresIn: parseInt(expiresIn) } // Convert expiresIn to an integer
     );
@@ -59,17 +59,21 @@ const restoreUser = (req, res, next) => {
     });
   };
 
-const requireAuth = [
-    restoreUser,
-    function (req, _res, next) {
+const requireAuth = (req, res, next) => {
+  restoreUser(req, res, () => {
       if (req.user) return next();
 
       const err = new Error('Authentication required');
       err.status = 401;
       err.title = 'Authentication required';
       err.errors = ['Authentication required'];
-      return next(err);
-    }
-  ];
+      return res.status(401).json({
+          message: err.message,
+          statusCode: err.status,
+          errors: err.errors
+      });
+  });
+};
+
 
   module.exports = { setTokenCookie, restoreUser, requireAuth };
