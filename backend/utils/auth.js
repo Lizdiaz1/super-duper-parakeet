@@ -75,5 +75,20 @@ const requireAuth = (req, res, next) => {
   });
 };
 
+const requireRole = (requiredRole) => {
+  return (req, res, next) => {
+      if (!req.user) {
+          // User not logged in
+          return res.status(401).json({ message: "Authentication required" });
+      }
+
+      if (req.user.role !== requiredRole) {
+          // User does not have the required role
+          return res.status(403).json({ message: "Forbidden: insufficient permissions" });
+      }
+
+      next(); // User has the required role, proceed to the route handler
+  };
+};
 
   module.exports = { setTokenCookie, restoreUser, requireAuth };
