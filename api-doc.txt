@@ -732,7 +732,7 @@ Returns all the reviews that belong to a spot specified by id.
     {
       "message": "Spot couldn't be found"
     }
-    ```
+
 ### Create a Review for a Spot based on the Spot's id
 Create and return a new review for a spot specified by id.
 * Require Authentication: true
@@ -1336,4 +1336,3 @@ Return spots filtered by query parameters.
       }
     }
     ```
-
