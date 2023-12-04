@@ -7,6 +7,7 @@ const helmet = require('helmet');
 const cookieParser = require('cookie-parser');
 const { ValidationError } = require('sequelize');
 const sessionRouter = require('./routes/api/session');
+const spotsRouter = require('./routes/api/spots');
 
 const { environment } = require('./config');
 const isProduction = environment === 'production';
@@ -44,6 +45,7 @@ if (!isProduction) {
 
   app.use(routes);
   app.use('/api/session', sessionRouter);
+  app.use('/api/spots', spotsRouter);
 
   // Catch unhandled requests and forward to error handler
 app.use((_req, _res, next) => {
