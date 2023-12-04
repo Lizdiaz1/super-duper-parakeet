@@ -10,69 +10,61 @@ const { handleValidationErrors } = require('../../utils/validation');
 
 const router = express.Router();
 
-// Sign up
-router.post('/', async (req, res, next) => {
-    const { email, username, password } = req.body;
+const validateSignup = [
+  check('email')
+    .exists({ checkFalsy: true })
+    .isEmail()
+    .withMessage('Please provide a valid email.'),
+  check('username')
+    .exists({ checkFalsy: true })
+    .isLength({ min: 4 })
+    .withMessage('Please provide a username with at least 4 characters.'),
+  check('username')
+    .not()
+    .isEmail()
+    .withMessage('Username cannot be an email.'),
+  check('password')
+    .exists({ checkFalsy: true })
+    .isLength({ min: 6 })
+    .withMessage('Password must be 6 characters or more.'),
+  handleValidationErrors,
+];
 
-    const hashedPassword = bcrypt.hashSync(password, 10); // Salt rounds = 10
-    try {
+// Consolidated Sign up
+router.post('/', validateSignup, handleValidationErrors, async (req, res, next) => {
+  const { email, firstName, lastName, password } = req.body;
+
+  try {
+      // Check if user already exists
+      const existingUser = await User.findOne({ where: { email } });
+      if (existingUser) {
+          return res.status(500).json({ message: "User already exists" });
+      }
+
+      // Hash the password
+      const hashedPassword = bcrypt.hashSync(password, 10);
+
+      // Create new user
       const user = await User.create({
-        username,
-        email,
-        hashedPassword
+          username,
+          email,
+          firstName,
+          lastName,
+          hashedPassword
       });
 
-      const safeUser = {
-        id: user.id,
-        email: user.email,
-        username: user.username
-      };
-
-      await setTokenCookie(res, safeUser);
+      // Log the user in
+      setTokenCookie(res, user);
 
       return res.json({
-        user: safeUser
+        id: user.id,
+        email: user.email,
+        firstName: user.firstName,
+        lastName: user.lastName
       });
-    } catch (error) {
-      next(error); // Handle errors, perhaps duplicate username/email
-    }
-  });
-
-  const validateSignup = [
-    check('email')
-      .exists({ checkFalsy: true })
-      .isEmail()
-      .withMessage('Please provide a valid email.'),
-    check('username')
-      .exists({ checkFalsy: true })
-      .isLength({ min: 4 })
-      .withMessage('Please provide a username with at least 4 characters.'),
-    check('username')
-      .not()
-      .isEmail()
-      .withMessage('Username cannot be an email.'),
-    check('password')
-      .exists({ checkFalsy: true })
-      .isLength({ min: 6 })
-      .withMessage('Password must be 6 characters or more.'),
-    handleValidationErrors,
-  ];
-//signup
-  router.post('/', validateSignup, async (req, res) => {
-    const { email, username, password } = req.body;
-    const hashedPassword = bcrypt.hashSync(password);
-    const user = await User.create({ email, username, hashedPassword });
-
-    const safeUser = {
-      id: user.id,
-      email: user.email,
-      username: user.username,
-    };
-
-    await setTokenCookie(res, safeUser);
-
-    return res.json({ user: safeUser });
-  });
-
+  } catch (error) {
+      next(error);
+  }
+});
 
 module.exports = router;

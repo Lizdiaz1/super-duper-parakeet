@@ -1,5 +1,6 @@
 // backend/utils/validation.js
 const { validationResult } = require('express-validator');
+const { check } = require('express-validator');
 
 const handleValidationErrors = (req, _res, next) => {
   const validationErrors = validationResult(req);
@@ -20,4 +21,19 @@ const handleValidationErrors = (req, _res, next) => {
   }
 };
 
-module.exports = { handleValidationErrors };
+const validateSignup = [
+    check('email')
+        .isEmail()
+        .withMessage('Please provide a valid email.'),
+    check('firstName')
+        .not()
+        .isEmpty()
+        .withMessage('First name is required.'),
+    check('lastName')
+        .not()
+        .isEmpty()
+        .withMessage('Last name is required.'),
+    // Add any additional validations here
+];
+
+module.exports = { validateSignup, handleValidationErrors };

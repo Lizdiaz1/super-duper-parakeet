@@ -51,6 +51,7 @@ router.post('/', validateLogin, async (req, res, next) => {
     return res.json({ user: safeUser });
 });
 
+  
 // Log out
 router.delete('/', (_req, res) => {
     res.clearCookie('token');
