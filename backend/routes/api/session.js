@@ -51,7 +51,7 @@ router.post('/', validateLogin, async (req, res, next) => {
     return res.json({ user: safeUser });
 });
 
-  
+
 // Log out
 router.delete('/', (_req, res) => {
     res.clearCookie('token');
@@ -70,6 +70,22 @@ router.get('/', (req, res) => {
     return res.json({ user: safeUser });
   } else {
     return res.json({ user: null });
+  }
+});
+
+// Get current user
+router.get('/current', requireAuth, (req, res) => {
+  const { user } = req;
+  if (user) {
+      const safeUser = {
+          id: user.id,
+          email: user.email,
+          firstName: user.firstName,
+          lastName: user.lastName
+      };
+      res.json({ user: safeUser });
+  } else {
+      res.status(401).json({ message: 'User not authenticated' });
   }
 });
 
