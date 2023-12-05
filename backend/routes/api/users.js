@@ -67,4 +67,18 @@ router.post('/', validateSignup, handleValidationErrors, async (req, res, next) 
   }
 });
 
+router.post('/', validateLogin, async (req, res, next) => {
+  const { credential, password } = req.body;
+  return res.json({
+    user: {
+      id: user.id,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      email: user.email,
+      username: user.username
+    }
+  });
+});
+
+
 module.exports = router;
