@@ -9,6 +9,7 @@ const { ValidationError } = require('sequelize');
 const sessionRouter = require('./routes/api/session');
 const spotsRouter = require('./routes/api/spots');
 const usersRouter = require('./routes/api/users');
+require('dotenv').config();
 
 const { environment } = require('./config');
 const isProduction = environment === 'production';
