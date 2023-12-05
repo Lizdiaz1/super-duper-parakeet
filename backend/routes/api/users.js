@@ -66,6 +66,17 @@ router.post('/', validateSignup, handleValidationErrors, async (req, res, next) 
       next(error);
   }
 });
+//get the current user
+router.get('/current', restoreUser, (req, res) => {
+  if (req.user) {
+    const { id, firstName, lastName, email, username } = req.user;
+    return res.json({
+      user: { id, firstName, lastName, email, username }
+    });
+  } else {
+    return res.json({ user: null });
+  }
+});
 
 
 module.exports = router;
