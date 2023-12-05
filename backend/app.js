@@ -8,6 +8,7 @@ const cookieParser = require('cookie-parser');
 const { ValidationError } = require('sequelize');
 const sessionRouter = require('./routes/api/session');
 const spotsRouter = require('./routes/api/spots');
+const usersRouter = require('./routes/api/users');
 
 const { environment } = require('./config');
 const isProduction = environment === 'production';
@@ -80,5 +81,7 @@ app.use((err, _req, res, _next) => {
     stack: isProduction ? null : err.stack
   });
 });
+
+app.use('/api/users', usersRouter);
 
   module.exports = app;
