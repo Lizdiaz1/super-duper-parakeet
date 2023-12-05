@@ -8,7 +8,7 @@ module.exports = (sequelize) => {
       type: DataTypes.INTEGER,
       allowNull: false,
       references: {
-        model: 'Spots', // Assuming 'Spots' is the name of your Spot table
+        model: 'Spot',
         key: 'id'
       }
     },
@@ -23,7 +23,6 @@ module.exports = (sequelize) => {
   }, {
     sequelize,
     modelName: 'SpotImage',
-    // Additional model options as needed
   });
 
   return SpotImage;
