@@ -83,5 +83,6 @@ app.use((err, _req, res, _next) => {
 });
 
 app.use('/api/users', usersRouter);
+app.use('/api/spots', spotsRouter)
 
   module.exports = app;
