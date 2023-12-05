@@ -2,7 +2,7 @@
 const express = require('express');
 const bcrypt = require('bcryptjs');
 
-const { setTokenCookie, requireAuth } = require('../../utils/auth');
+const { setTokenCookie, requireAuth, restoreUser } = require('../../utils/auth');
 const { User } = require('../../db/models');
 
 const { check } = require('express-validator');
@@ -81,7 +81,7 @@ router.get('/current', restoreUser, (req, res) => {
 // Get all spots owned by the current user
 router.get('/spots', requireAuth, async (req, res, next) => {
   try {
-      const userId = req.user.id; 
+      const userId = req.user.id;
       const spots = await Spot.findAll({
           where: { ownerId: userId },
           // additional attributes

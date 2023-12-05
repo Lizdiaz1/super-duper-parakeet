@@ -6,7 +6,7 @@ const { check } = require('express-validator');
 const { setTokenCookie } = require('../../utils/auth');
 const { User } = require('../../db/models');
 const { handleValidationErrors } = require('../../utils/validation');
-const { requireAuth } = require('../../middleware/authMiddleware');
+const { requireAuth } = require('../../utils/auth');
 
 const router = express.Router();
 
