@@ -1,5 +1,10 @@
 'use strict';
 
+let options = {};
+if (process.env.NODE_ENV === 'production') {
+  options.schema = process.env.SCHEMA;
+}
+
 module.exports = {
   up: async (queryInterface, Sequelize) => {
     await queryInterface.createTable('Spots', {
@@ -32,11 +37,11 @@ module.exports = {
       },
       lat: {
         type: Sequelize.FLOAT,
-        allowNull: true // Set to false if required
+        allowNull: true
       },
       lng: {
         type: Sequelize.FLOAT,
-        allowNull: true // Set to false if required
+        allowNull: true
       },
       name: {
         type: Sequelize.STRING,
@@ -62,6 +67,7 @@ module.exports = {
   },
 
   down: async (queryInterface, Sequelize) => {
+    options.tableName = "Spots";
     await queryInterface.dropTable('Spots');
   }
 };
