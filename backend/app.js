@@ -10,6 +10,7 @@ const sessionRouter = require('./routes/api/session');
 const spotsRouter = require('./routes/api/spots');
 const usersRouter = require('./routes/api/users');
 require('dotenv').config();
+const reviewsRouter = require('./routes/api/reviews');
 
 const { environment } = require('./config');
 const isProduction = environment === 'production';
@@ -84,6 +85,7 @@ app.use((err, _req, res, _next) => {
 });
 
 app.use('/api/users', usersRouter);
-app.use('/api/spots', spotsRouter)
+app.use('/api/spots', spotsRouter);
+app.use('/api/reviews', reviewsRouter);
 
   module.exports = app;
