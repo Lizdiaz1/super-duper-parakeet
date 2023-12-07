@@ -53,7 +53,7 @@ router.get('/spots/:id/bookings', requireAuth, async (req, res, next) => {
 router.post('/spots/:id/bookings', requireAuth, async (req, res, next) => {
     const spotId = req.params.id;
     const { startDate, endDate } = req.body;
-    const userId = req.user.id; // Assuming req.user is set after authentication
+    const userId = req.user.id;
 
     try {
         const spot = await Spot.findByPk(spotId);
@@ -105,7 +105,7 @@ router.put('/bookings/:id', requireAuth, async (req, res, next) => {
 //DELETE - a booking
 router.delete('/bookings/:id', requireAuth, async (req, res, next) => {
     const bookingId = req.params.id;
-    const userId = req.user.id; // Assuming req.user is set after authentication
+    const userId = req.user.id; 
 
     try {
         const booking = await Booking.findByPk(bookingId, {

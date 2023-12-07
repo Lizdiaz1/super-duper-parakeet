@@ -7,7 +7,7 @@ const router = express.Router();
 
 router.get('/current', requireAuth, async (req, res, next) => {
     try {
-        const userId = req.user.id; // Assuming req.user is set by requireAuth
+        const userId = req.user.id;
         const reviews = await Review.findAll({
             where: { userId: userId },
             include: [
@@ -66,7 +66,7 @@ router.get('/spots/:id/reviews', async (req, res, next) => {
 router.post('/spots/:id/reviews', requireAuth, async (req, res, next) => {
     const { review, stars } = req.body;
     const spotId = req.params.id;
-    const userId = req.user.id; // Assuming req.user is set after authentication
+    const userId = req.user.id;
 
     try {
         // Check if the spot exists
@@ -98,7 +98,7 @@ router.post('/spots/:id/reviews', requireAuth, async (req, res, next) => {
 router.post('/reviews/:id/images', requireAuth, async (req, res, next) => {
     const reviewId = req.params.id;
     const { url } = req.body;
-    const userId = req.user.id; // Assuming req.user is set after authentication
+    const userId = req.user.id;
 
     try {
         const review = await Review.findByPk(reviewId);
@@ -126,7 +126,7 @@ router.post('/reviews/:id/images', requireAuth, async (req, res, next) => {
 router.put('/reviews/:id', requireAuth, async (req, res, next) => {
     const reviewId = req.params.id;
     const { review, stars } = req.body;
-    const userId = req.user.id; // Assuming req.user is set after authentication
+    const userId = req.user.id; 
 
     try {
         const existingReview = await Review.findByPk(reviewId);
@@ -155,7 +155,7 @@ router.put('/reviews/:id', requireAuth, async (req, res, next) => {
 //DELETE a review
 router.delete('/reviews/:id', requireAuth, async (req, res, next) => {
     const reviewId = req.params.id;
-    const userId = req.user.id; // Assuming req.user is set after authentication
+    const userId = req.user.id;
 
     try {
         const review = await Review.findByPk(reviewId);
