@@ -62,9 +62,7 @@ router.get('/spots/:id/reviews', async (req, res, next) => {
     }
 });
 
-// Middleware for authentication
-const { requireAuth } = require('../../middleware/authMiddleware');
-
+// authentication
 router.post('/spots/:id/reviews', requireAuth, async (req, res, next) => {
     const { review, stars } = req.body;
     const spotId = req.params.id;
@@ -154,7 +152,7 @@ router.put('/reviews/:id', requireAuth, async (req, res, next) => {
     }
 });
 
-//Delete a review
+//DELETE a review
 router.delete('/reviews/:id', requireAuth, async (req, res, next) => {
     const reviewId = req.params.id;
     const userId = req.user.id; // Assuming req.user is set after authentication
@@ -175,4 +173,5 @@ router.delete('/reviews/:id', requireAuth, async (req, res, next) => {
         next(error);
     }
 });
+
 module.exports = router;
