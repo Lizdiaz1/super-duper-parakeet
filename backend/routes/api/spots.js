@@ -2,11 +2,52 @@
 const express = require('express');
 const { Spot, SpotImage, User } = require('../../db/models');
 const { requireAuth } = require('../../utils/auth');
-
+const { query } = require('express-validator')
 
 const router = express.Router();
 
-// Get all spots
+//GET query files
+router.get('/', [
+    query('page').optional().isInt({ min: 1, max: 10 }).withMessage('Page must be between 1 and 10'),
+    query('size').optional().isInt({ min: 1, max: 20 }).withMessage('Size must be between 1 and 20'),
+
+], async (req, res, next) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        return res.status(400).json({ errors: errors.array() });
+    }
+
+    const page = parseInt(req.query.page) || 1;
+    const size = parseInt(req.query.size) || 20;
+    const { minLat, maxLat, minLng, maxLng, minPrice, maxPrice } = req.query;
+
+    const pagination = {
+        limit: size,
+        offset: (page - 1) * size,
+    };
+
+    let whereClause = {};
+
+    if (minLat) whereClause.lat = { ...whereClause.lat, $gte: parseFloat(minLat) };
+    if (maxLat) whereClause.lat = { ...whereClause.lat, $lte: parseFloat(maxLat) };
+    if (minLng) whereClause.lng = { ...whereClause.lng, $gte: parseFloat(minLng) };
+    if (maxLng) whereClause.lng = { ...whereClause.lng, $lte: parseFloat(maxLng) };
+    if (minPrice) whereClause.price = { ...whereClause.price, $gte: parseFloat(minPrice) };
+    if (maxPrice) whereClause.price = { ...whereClause.price, $lte: parseFloat(maxPrice) };
+
+    try {
+        const spots = await Spot.findAll({
+            where: whereClause,
+            ...pagination
+        });
+
+        res.status(200).json({ Spots: spots, page, size });
+    } catch (error) {
+        next(error);
+    }
+});
+
+// GET all spots
 router.get('/', async (req, res, next) => {
     try {
         const spots = await Spot.findAll({
@@ -20,7 +61,7 @@ router.get('/', async (req, res, next) => {
     }
 });
 
-//get details of a spot from an id
+//GET details of a spot from an id
 router.get('/:id', async (req, res, next) => {
     const spotId = req.params.id;
     const spot = await Spot.findByPk(spotId, {
@@ -44,7 +85,7 @@ router.get('/:id', async (req, res, next) => {
     res.json(spot);
 });
 
-//create a spot
+//POST - create a spot
 router.post('/', requireAuth, async (req, res, next) => {
     const { address, city, state, country, lat, lng, name, description, price } = req.body;
     const ownerId = req.user.id;
@@ -75,7 +116,7 @@ router.post('/', requireAuth, async (req, res, next) => {
         next(error);
     }
 });
-// adding an image to a spot
+//POST - adding an image to a spot
 router.post('/:id/images', requireAuth, async (req, res, next) => {
     const { id } = req.params; // Spot ID
     const { url, preview } = req.body;
@@ -99,7 +140,7 @@ router.post('/:id/images', requireAuth, async (req, res, next) => {
     return res.status(201).json(newImage);
 });
 
-//edit spot
+//PUT - edit spot
 router.put('/:id', requireAuth, async (req, res, next) => {
     const { id } = req.params;
     const { address, city, state, country, lat, lng, name, description, price } = req.body;
@@ -120,7 +161,8 @@ router.put('/:id', requireAuth, async (req, res, next) => {
 
     return res.json(spot);
 });
-//delete a spot
+
+//DELETE - a spot
 router.delete('/:id', requireAuth, async (req, res, next) => {
     const { id } = req.params;
     const userId = req.user.id;

@@ -126,7 +126,7 @@ router.post('/reviews/:id/images', requireAuth, async (req, res, next) => {
 router.put('/reviews/:id', requireAuth, async (req, res, next) => {
     const reviewId = req.params.id;
     const { review, stars } = req.body;
-    const userId = req.user.id; 
+    const userId = req.user.id;
 
     try {
         const existingReview = await Review.findByPk(reviewId);
@@ -168,6 +168,33 @@ router.delete('/reviews/:id', requireAuth, async (req, res, next) => {
         }
 
         await review.destroy();
+        res.status(200).json({ message: "Successfully deleted" });
+    } catch (error) {
+        next(error);
+    }
+});
+
+//DELETE review image
+router.delete('/reviews/:reviewId/images/:imageId', requireAuth, async (req, res, next) => {
+    const { reviewId, imageId } = req.params;
+    const userId = req.user.id;
+
+    try {
+        const review = await Review.findByPk(reviewId);
+        if (!review) {
+            return res.status(404).json({ message: "Review couldn't be found" });
+        }
+
+        if (review.userId !== userId) {
+            return res.status(403).json({ message: "Forbidden" });
+        }
+
+        const image = await ReviewImage.findByPk(imageId);
+        if (!image || image.reviewId !== review.id) {
+            return res.status(404).json({ message: "Review Image couldn't be found" });
+        }
+
+        await image.destroy();
         res.status(200).json({ message: "Successfully deleted" });
     } catch (error) {
         next(error);
