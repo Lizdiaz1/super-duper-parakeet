@@ -15,6 +15,7 @@ const reviewsRouter = require('./routes/api/reviews');
 const bookingsRouter = require('./routes/api/bookings');
 
 require('dotenv').config();
+
 const { environment } = require('./config');
 const isProduction = environment === 'production';
 
