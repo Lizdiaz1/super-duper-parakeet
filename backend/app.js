@@ -20,7 +20,7 @@ const isProduction = environment === 'production';
 
 const app = express();
 
-// Middleware setup
+// auth setup
 app.use(morgan('dev'));
 app.use(cookieParser());
 app.use(express.json());
