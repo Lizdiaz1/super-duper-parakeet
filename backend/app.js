@@ -6,12 +6,14 @@ const csurf = require('csurf');
 const helmet = require('helmet');
 const cookieParser = require('cookie-parser');
 const { ValidationError } = require('sequelize');
+
 const sessionRouter = require('./routes/api/session');
 const spotsRouter = require('./routes/api/spots');
 const usersRouter = require('./routes/api/users');
-require('dotenv').config();
 const reviewsRouter = require('./routes/api/reviews');
 const bookingsRouter = require('./routes/api/bookings');
+
+require('dotenv').config();
 
 const { environment } = require('./config');
 const isProduction = environment === 'production';
@@ -50,6 +52,9 @@ if (!isProduction) {
   app.use(routes);
   app.use('/api/session', sessionRouter);
   app.use('/api/spots', spotsRouter);
+  app.use('/api/users', usersRouter);
+  app.use('/api/reviews', reviewsRouter);
+  app.use('/api/bookings', bookingsRouter);
 
   // Catch unhandled requests and forward to error handler
 app.use((_req, _res, next) => {
@@ -85,9 +90,6 @@ app.use((err, _req, res, _next) => {
   });
 });
 
-app.use('/api/users', usersRouter);
-app.use('/api/spots', spotsRouter);
-app.use('/api/reviews', reviewsRouter);
-app.use('/api/bookings', bookingsRouter);
+
 
   module.exports = app;
