@@ -1,7 +1,7 @@
 // backend/utils/auth.js
 const jwt = require('jsonwebtoken');
-const { jwtConfig } = require('../config'); // Adjust the path if needed
-const { User } = require('../db/models'); // Adjust the path if needed
+const { jwtConfig } = require('../config'); 
+const { User } = require('../db/models');
 
 const { secret, expiresIn } = jwtConfig;
 
