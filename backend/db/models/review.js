@@ -1,44 +1,49 @@
-"use strict";
-const { Model } = require("sequelize");
+'use strict';
+const { Model } = require('sequelize');
+
 module.exports = (sequelize, DataTypes) => {
-	class Review extends Model {
-		/**
-		 * Helper method for defining associations.
-		 * This method is not a part of Sequelize lifecycle.
-		 * The `models/index` file will call this method automatically.
-		 */
-		static associate(models) {
-			Review.belongsTo(models.Spot, { foreignKey: "spotId" });
-			Review.belongsTo(models.User, { foreignKey: "userId" });
-			Review.hasMany(models.ReviewImage, { foreignKey: "id" });
-		}
-	}
-	Review.init(
-		{
-			userId: { type: DataTypes.INTEGER, allowNull: false },
-			spotId: { type: DataTypes.INTEGER, allowNull: false },
-			review: { type: DataTypes.STRING, allowNull: false, notEmpty: true },
-			stars: {
-				type: DataTypes.INTEGER,
-				validate: {
-					isInt: {
-						msg: "Stars must be an integer from 1 to 5",
-					},
-					min: {
-						args: [1],
-						msg: "Stars must be an integer from 1 to 5",
-					},
-					max: {
-						args: [5],
-						msg: "Stars must be an integer from 1 to 5",
-					},
-				},
-			},
-		},
-		{
-			sequelize,
-			modelName: "Review",
-		}
-	);
-	return Review;
+  class Review extends Model {
+    static associate(models) {
+      // Association with User
+      Review.belongsTo(models.User, {
+        foreignKey: 'userId',
+        as: 'user',
+        onDelete: 'CASCADE',
+      });
+
+      // Association with Spot
+      Review.belongsTo(models.Spot, { // Replace 'Entity' with 'Spot'
+        foreignKey: 'spotId',
+        as: 'spot',
+        onDelete: 'CASCADE',
+      });
+
+      // Association with ReviewImage
+      Review.hasMany(models.ReviewImage, {
+        foreignKey: 'reviewId',
+        as: 'images',
+        onDelete: 'CASCADE',
+      });
+    }
+  };
+
+  Review.init({
+    userId: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      references: { model: 'Users', key: 'id' }
+    },
+    entityId: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      // Replace 'Entity' with the actual entity name
+      references: { model: 'Entities', key: 'id' }
+    },
+    // Other fields like review content, rating, etc.
+  }, {
+    sequelize,
+    modelName: 'Review',
+  });
+
+  return Review;
 };
