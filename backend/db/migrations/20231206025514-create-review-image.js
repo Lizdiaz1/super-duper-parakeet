@@ -8,49 +8,36 @@ if (process.env.NODE_ENV === 'production') {
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
   async up(queryInterface, Sequelize) {
-    await queryInterface.createTable('Users', {
+    await queryInterface.createTable('ReviewImages', {
       id: {
         allowNull: false,
         autoIncrement: true,
         primaryKey: true,
         type: Sequelize.INTEGER,
       },
-      firstName: {
+      reviewId: {
         allowNull: false,
-        type: Sequelize.STRING(30),
+        type: Sequelize.INTEGER,
+        references: { model: 'Reviews' },
       },
-      lastName: {
+      url: {
         allowNull: false,
-        type: Sequelize.STRING(30),
-      },
-      email: {
-        allowNull: false,
-        unique: true,
-        type: Sequelize.STRING(256)
-      },
-      username: {
-        type: Sequelize.STRING(30),
-        allowNull: false,
-        unique: true,
-      },
-      hashedPassword: {
-        allowNull: false,
-        type: Sequelize.STRING.BINARY,
+        type: Sequelize.STRING
       },
       createdAt: {
-        allowNull: false,
         defaultValue: Sequelize.literal("CURRENT_TIMESTAMP"),
+        allowNull: false,
         type: Sequelize.DATE
       },
       updatedAt: {
-        allowNull: false,
         defaultValue: Sequelize.literal("CURRENT_TIMESTAMP"),
+        allowNull: false,
         type: Sequelize.DATE
       }
-    }, options);
+    });
   },
   async down(queryInterface, Sequelize) {
-    options.tableName = `Users`;
-    await queryInterface.dropTable(options);
+    options.tableName = `ReviewImages`;
+    await queryInterface.dropTable('ReviewImages');
   }
 };

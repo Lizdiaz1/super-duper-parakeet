@@ -21,5 +21,8 @@
   "bugs": {
     "url": "https://github.com/Lizdiaz1/super-duper-parakeet/issues"
   },
-  "homepage": "https://github.com/Lizdiaz1/super-duper-parakeet#readme"
+  "homepage": "https://github.com/Lizdiaz1/super-duper-parakeet#readme",
+  "dependencies": {
+    "dotenv-cli": "^7.3.0"
+  }
 }
