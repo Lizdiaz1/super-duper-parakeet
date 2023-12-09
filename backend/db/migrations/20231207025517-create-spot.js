@@ -56,21 +56,6 @@ module.exports = {
         allowNull: false,
         type: Sequelize.DECIMAL
       },
-      avgRating: {
-        type: Sequelize.DECIMAL
-      },
-      previewImage: {
-        type: Sequelize.STRING
-      },
-      numReviews: {
-        type: Sequelize.INTEGER
-      },
-      SpotImages: {
-        type: Sequelize.ARRAY(Sequelize.JSON),
-      },
-      Owner: {
-        type: Sequelize.JSON,
-      },
       createdAt: {
         defaultValue: Sequelize.literal("CURRENT_TIMESTAMP"),
         allowNull: false,
