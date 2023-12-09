@@ -8,49 +8,45 @@ if (process.env.NODE_ENV === 'production') {
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
   async up(queryInterface, Sequelize) {
-    await queryInterface.createTable('Users', {
+    await queryInterface.createTable('Bookings', {
       id: {
         allowNull: false,
         autoIncrement: true,
         primaryKey: true,
+        type: Sequelize.INTEGER
+      },
+      spotId: {
+        allowNull: false,
         type: Sequelize.INTEGER,
+        references: { model: 'Spots' },
       },
-      firstName: {
+      userId: {
         allowNull: false,
-        type: Sequelize.STRING(30),
+        type: Sequelize.INTEGER,
+        references: { model: 'Users' },
       },
-      lastName: {
+      startDate: {
         allowNull: false,
-        type: Sequelize.STRING(30),
+        type: Sequelize.DATE
       },
-      email: {
+      endDate: {
         allowNull: false,
-        unique: true,
-        type: Sequelize.STRING(256)
-      },
-      username: {
-        type: Sequelize.STRING(30),
-        allowNull: false,
-        unique: true,
-      },
-      hashedPassword: {
-        allowNull: false,
-        type: Sequelize.STRING.BINARY,
+        type: Sequelize.DATE
       },
       createdAt: {
-        allowNull: false,
         defaultValue: Sequelize.literal("CURRENT_TIMESTAMP"),
+        allowNull: false,
         type: Sequelize.DATE
       },
       updatedAt: {
-        allowNull: false,
         defaultValue: Sequelize.literal("CURRENT_TIMESTAMP"),
+        allowNull: false,
         type: Sequelize.DATE
       }
-    }, options);
+    });
   },
   async down(queryInterface, Sequelize) {
-    options.tableName = `Users`;
-    await queryInterface.dropTable(options);
+    options.tableName = `Bookings`;
+    await queryInterface.dropTable('Bookings');
   }
 };

@@ -5,30 +5,25 @@ const cors = require('cors');
 const csurf = require('csurf');
 const helmet = require('helmet');
 const cookieParser = require('cookie-parser');
-const routes = require('./routes')
-const { ValidationError } = require('sequelize');
-
 
 const { environment } = require('./config');
-//Create a variable called isProduction 
-//that will be true if the environment is in production or not 
 const isProduction = environment === 'production'
+
+const { ValidationError } = require('sequelize');
+
+const routes = require('./routes')
 
 const app = express()
 
 app.use(morgan('dev'))
-//Add the cookie-parser middleware for parsing cookies
 app.use(cookieParser())
 app.use(express.json())
 
 
 if(!isProduction) {
-    //enable cors only in development 
+    //enable cors only in development
     app.use(cors())
 }
-
-
-
 
 app.use(
     helmet.crossOriginResourcePolicy({
@@ -47,7 +42,6 @@ app.use(
     })
 )
 
-
 app.use(routes)
 
 //404 not found
@@ -62,16 +56,17 @@ app.use((_req, _res, next) => {
 // Process sequelize errors
 app.use((err, _req, _res, next) => {
 
-    if (err instanceof ValidationError) {
-      let errors = {};
-      for (let error of err.errors) {
-        errors[error.path] = error.message;
-      }
-      err.title = 'Validation error';
-      err.errors = errors;
+  if (err instanceof ValidationError) {
+    let errors = {};
+    for (let error of err.errors) {
+      errors[error.path] = error.message;
     }
-    next(err);
-  });
+    err.title = 'Validation error';
+    err.errors = errors;
+    err.message = "Validation error";
+  }
+  next(err);
+});
 
   // Error formatter
 app.use((err, _req, res, _next) => {
@@ -85,7 +80,6 @@ app.use((err, _req, res, _next) => {
     });
   });
 
-  //tested
 
-  
+
 module.exports = app

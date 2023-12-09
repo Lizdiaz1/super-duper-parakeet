@@ -36,7 +36,7 @@ module.exports = {
 					userId: 3,
 					spotId: 2,
 					review:
-						"I used to be lonely, but after staying here one night I always feel like somebody si right there behind me, watching my back :)",
+						"Beautiful view!:)",
 					stars: 5,
 				},
 				{

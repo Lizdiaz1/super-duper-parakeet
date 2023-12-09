@@ -28,15 +28,15 @@ module.exports = {
 				},
 				{
 					ownerId: 1,
-					address: "666 Forest Place",
-					city: "Hell",
-					state: "Michigan",
-					country: "United States of America",
-					lat: 17.7645358,
-					lng: -102.4730327,
-					name: "A Cabin In The Woods",
-					description: "Just a regular cabin in the woods. Definitely not haunted. We are not liable for any loss of souls or future costs of exorcisms after staying a night here. Family friendly, no smoking please.",
-					price: 15,
+					address: "123 Country Lane",
+					city: "Selby",
+					state: "North Yorkshire",
+					country: "England",
+					lat: 11.11,
+					lng: 22.22,
+					name: "The Wardrobe",
+					description: "It's bigger on the inside",
+					price: 50.00,
 					createdAt: new Date(),
 					updatedAt: new Date()
 				},
@@ -79,9 +79,9 @@ module.exports = {
 		return queryInterface.bulkDelete(
 			options,
 			{
-				state: { [Op.in]: ["California"] },
-			},
-			{}
-		);
+				name: { [Op.in]: ["Disney Land",
+				"Cove Point Lighthouse Keeper's House",
+				"The Wardrobe", "Luxurious Swiss Chalet"] },
+			}, 	{});
 	},
 };
