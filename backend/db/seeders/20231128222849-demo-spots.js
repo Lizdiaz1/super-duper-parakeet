@@ -23,6 +23,8 @@ module.exports = {
 					name: "Luxurious Swiss Chalet",
 					description: "This chalet includes five deluxe bedroom suites, open-plan living spaces with floor-to-ceiling windows, a private in-house Gourmet Chef, and a carefully curated art collection.",
 					price: 48285,
+					createdAt: new Date(),
+					updatedAt: new Date()
 				},
 				{
 					ownerId: 1,
@@ -34,7 +36,9 @@ module.exports = {
 					lng: -102.4730327,
 					name: "A Cabin In The Woods",
 					description: "Just a regular cabin in the woods. Definitely not haunted. We are not liable for any loss of souls or future costs of exorcisms after staying a night here. Family friendly, no smoking please.",
-					price: 1,
+					price: 15,
+					createdAt: new Date(),
+					updatedAt: new Date()
 				},
 				{
 					ownerId: 2,
@@ -47,6 +51,8 @@ module.exports = {
 					name: "Cove Point Lighthouse Keeper's House",
 					description: "This historic site, listed on the National Register of Historic Places, includes accommodation for up to eight guests in three bedrooms. It's an active lighthouse and keeper’s home located on a seven-acre point of land in Chesapeake Bay. The cottage features a screened-in porch with views of the lighthouse and water, and guests have access to a beach. Modern comforts like a full kitchen, laundry room, Wi-Fi, and TV are included",
 					price: 325,
+					createdAt: new Date(),
+					updatedAt: new Date()
 				},
 				{
 					ownerId: 3,
@@ -59,6 +65,8 @@ module.exports = {
 					name: "Disney Land",
 					description: "It's the entire Disney Land Park. Rent out the whole park",
 					price: 350000,
+					createdAt: new Date(),
+					updatedAt: new Date()
 				},
 			],
 			{ validate: true }
