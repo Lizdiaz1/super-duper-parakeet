@@ -1,94 +1,73 @@
-// backend/utils/auth.js
-const jwt = require('jsonwebtoken');
-const { jwtConfig } = require('../config'); 
-const { User } = require('../db/models');
+const jwt = require("jsonwebtoken");
+const { jwtConfig } = require("../config");
+const { User } = require("../db/models");
 
 const { secret, expiresIn } = jwtConfig;
 
-// Sends a JWT Cookie
 const setTokenCookie = (res, user) => {
-  const safeUser = {
-    id: user.id,
-    email: user.email,
-    username: user.username
-  }
-  // Create the token.
-    const token = jwt.sign(
-      { data: safeUser },
-      secret,
-      { expiresIn: parseInt(expiresIn) } // Convert expiresIn to an integer
-    );
+	// Create the token.
+	const safeUser = {
+		id: user.id,
+		email: user.email,
+		username: user.username,
+	};
+	const token = jwt.sign(
+		{ data: safeUser },
+		secret,
+		{ expiresIn: parseInt(expiresIn) } // 604,800 seconds = 1 week
+	);
 
-    const isProduction = process.env.NODE_ENV === "production";
+	const isProduction = process.env.NODE_ENV === "production";
 
-    // Set the token cookie
-    res.cookie('token', token, {
-      maxAge: expiresIn * 1000, // maxAge in milliseconds
-      httpOnly: true,
-      secure: isProduction,
-      sameSite: isProduction && "Lax"
-    });
+	// Set the token cookie
+	res.cookie("token", token, {
+		maxAge: expiresIn * 1000, // maxAge in milliseconds
+		httpOnly: true,
+		secure: isProduction,
+		sameSite: isProduction && "Lax",
+	});
 
-    return token;
-  };
+	return token;
+};
 
 const restoreUser = (req, res, next) => {
-    const { token } = req.cookies;
+	// token parsed from cookies
+	const { token } = req.cookies;
+	req.user = null;
 
-    if (!token) {
-      return next();
-    }
+	return jwt.verify(token, secret, null, async (err, jwtPayload) => {
+		if (err) {
+			return next();
+		}
 
-    return jwt.verify(token, secret, null, async (err, jwtPayload) => {
-      if (err) {
-        res.clearCookie('token');
-        return next();
-      }
+		try {
+			const { id } = jwtPayload.data;
+			req.user = await User.findByPk(id, {
+				attributes: {
+					include: ["email", "createdAt", "updatedAt"],
+				},
+			});
+		} catch (e) {
+			res.clearCookie("token");
+			return next();
+		}
 
-      try {
-        const { id } = jwtPayload.data;
-        const user = await User.scope('currentUser').findByPk(id);
-        if (!user) throw new Error('User not found');
-        req.user = user;
-      } catch (e) {
-        res.clearCookie('token');
-        return next();
-      }
+		if (!req.user) res.clearCookie("token");
 
-      return next();
-    });
-  };
-
-const requireAuth = (req, res, next) => {
-  restoreUser(req, res, () => {
-      if (req.user) return next();
-
-      const err = new Error('Authentication required');
-      err.status = 401;
-      err.title = 'Authentication required';
-      err.errors = ['Authentication required'];
-      return res.status(401).json({
-          message: err.message,
-          statusCode: err.status,
-          errors: err.errors
-      });
-  });
+		return next();
+	});
 };
 
-const requireRole = (requiredRole) => {
-  return (req, res, next) => {
-      if (!req.user) {
-          // User not logged in
-          return res.status(401).json({ message: "Authentication required" });
-      }
+const requireAuth = function (req, _res, next) {
+	if (req.user) return next();
 
-      if (req.user.role !== requiredRole) {
-          // User does not have the required role
-          return res.status(403).json({ message: "Forbidden: insufficient permissions" });
-      }
-
-      next(); // User has the required role, proceed to the route handler
-  };
+	const err = new Error("Authentication required");
+	err.title = "Authentication required";
+	err.errors = { message: "Authentication required" };
+	err.status = 401;
+	return next(err);
 };
 
-  module.exports = { setTokenCookie, restoreUser, requireAuth };
+
+
+module.exports = { setTokenCookie, restoreUser, requireAuth };

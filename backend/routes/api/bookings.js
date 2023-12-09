@@ -1,135 +1,368 @@
-const express = require('express');
-const { Booking, Spot } = require('../../db/models');
-const { requireAuth } = require('../../utils/auth');
+const express = require("express");
+const bcrypt = require("bcryptjs");
+const { Op } = require("sequelize");
+
+const {
+	areIntervalsOverlapping,
+	isAfter,
+	isBefore,
+	isEqual,
+} = require("date-fns");
+
+const {
+	setTokenCookie,
+	restoreUser,
+	requireAuth,
+} = require("../../utils/auth");
+const {
+	Spot,
+	SpotImage,
+	Review,
+	User,
+	sequelize,
+	ReviewImage,
+	Booking,
+} = require("../../db/models");
+const { check } = require("express-validator");
+const { handleValidationErrors } = require("../../utils/validation");
 
 const router = express.Router();
 
-//GET all current user's booking
-router.get('/bookings/current', requireAuth, async (req, res, next) => {
-    const userId = req.user.id;
+router.get("/current", requireAuth, async (req, res) => {
+	const id = req.user.id;
 
-    try {
-        const bookings = await Booking.findAll({
-            where: { userId: userId },
-            include: [{
-                model: Spot,
-                attributes: ['id', 'ownerId', 'address', 'city', 'state', 'country', 'lat', 'lng', 'name', 'price', 'previewImage']
-            }]
-        });
+	const booking = await Booking.findAll({
+		where: {
+			userId: id,
+		},
 
-        res.status(200).json({ Bookings: bookings });
-    } catch (error) {
-        next(error);
-    }
+		include: {
+			model: Spot,
+		},
+	});
+
+	const bookingList = [];
+
+	booking.forEach((element) => {
+		bookingList.push(element.toJSON());
+	});
+
+	//! TEST THIS
+	if (!bookingList.length) {
+		res.status(404);
+		res.json({
+			message: "Bookings couldn't be found",
+		});
+	}
+
+	for (let i = 0; i < bookingList.length; i++) {
+		let currBookingList = bookingList[i];
+
+		const currSpot = await Spot.findAll({
+			group: ["Spot.id", "Reviews.id"],
+			where: { id: currBookingList.Spot.id },
+
+			include: [
+				{
+					model: Review,
+					attributes: [
+						[sequelize.fn("AVG", sequelize.col("Reviews.stars")), "avgRating"],
+						[sequelize.fn("COUNT", sequelize.col("Reviews.id")), "numReviews"],
+					],
+				},
+			],
+		});
+
+		let spotList = [];
+
+		currSpot.forEach((spot) => {
+			spotList.push(spot.toJSON());
+		});
+
+		//console.log(spotList[0].Reviews[0].avgRating);
+		for (let j = 0; j < spotList.length; j++) {
+			const currSpot = spotList[j];
+
+			if (currSpot.Reviews[0]) {
+				currSpot.numReviews = currSpot.Reviews[0].numReviews;
+				currSpot.avgStarRating = Number(currSpot.Reviews[0].avgRating);
+			}
+
+			delete currSpot.Reviews;
+
+			if (!currSpot.avgStarRating) {
+				currSpot.avgStarRating = 0;
+			}
+
+			//console.log(currSpot, "###########BEFORE");
+
+			delete currSpot.avgRating;
+			//console.log(currSpot, "**************AFTER");
+
+			const images = await SpotImage.findAll({
+				where: {
+					spotId: currBookingList.Spot.id,
+				},
+			});
+
+			if (images.length) {
+				let imageList = [];
+
+				images.forEach((image) => {
+					imageList.push(image.toJSON());
+				});
+
+				for (let k = 0; k < imageList.length; k++) {
+					let currImg = imageList[k];
+
+					//delete currImg.spotId;
+					if (currImg.isPreview === true) {
+						currSpot.previewImage = currImg.url;
+					}
+				}
+
+				currSpot.SpotImages = imageList;
+				delete currSpot.SpotImages;
+				//console.log(currSpot, "#############SPOT");
+				//console.log(currBookingList, "*****************BOOKINGLIST");
+
+				currBookingList.spotId = currBookingList.Spot.id;
+				currBookingList.Spot.previewImage = currSpot.previewImage;
+
+				delete currBookingList.Spot.avgRating;
+				delete currBookingList.Spot.description;
+				delete currBookingList.Spot.createdAt;
+				delete currBookingList.Spot.updatedAt;
+			}
+		}
+	}
+
+	res.json({ Bookings: bookingList });
 });
 
-//GET all booking by spot id
-router.get('/spots/:id/bookings', requireAuth, async (req, res, next) => {
-    const spotId = req.params.id;
-    const userId = req.user.id;
+router.put("/:bookingId", requireAuth, async (req, res) => {
+	const userId = req.user.id;
+	const bookingId = parseInt(req.params.bookingId);
 
-    try {
-        const spot = await Spot.findByPk(spotId);
-        if (!spot) {
-            return res.status(404).json({ message: "Spot couldn't be found" });
-        }
+	const { startDate, endDate } = req.body;
 
-        let queryOptions = { where: { spotId: spotId } };
+	const newStartDate = new Date(startDate);
+	const newEndDate = new Date(endDate);
 
-        if (spot.ownerId !== userId) {
-            queryOptions.attributes = ['spotId', 'startDate', 'endDate'];
-        } else {
-            queryOptions.include = [{ model: User, attributes: ['id', 'firstName', 'lastName'] }];
-        }
+	const booking = await Booking.findAll({
+		where: {
+			id: bookingId,
+		},
+	});
 
-        const bookings = await Booking.findAll(queryOptions);
-        res.status(200).json({ Bookings: bookings });
-    } catch (error) {
-        next(error);
-    }
+	if (!booking.length) {
+		res.status(404);
+		return res.json({
+			message: "Booking couldn't be found",
+		});
+	}
+	const bookingList = [];
+
+	booking.forEach((el) => {
+		bookingList.push(el.toJSON());
+	});
+
+	const allBookings = await Booking.findAll({
+		where: {
+			spotId: bookingList[0].spotId,
+			id: { [Op.not]: bookingId },
+		},
+	});
+
+	//console.log(spotList)
+
+	if (bookingList[0].userId !== userId) {
+		res.status(403);
+		return res.json({
+			message: "Forbidden",
+		});
+	}
+
+	if (newStartDate >= newEndDate) {
+		res.status(400);
+		return res.json({
+			message: "Bad Request",
+			errors: {
+				endDate: "endDate cannot be on or before startDate",
+			},
+		});
+	}
+
+	const allBookingList = [];
+
+	allBookings.forEach((el) => {
+		allBookingList.push(el.toJSON());
+	});
+
+	const errors = {};
+	//!Test This
+	allBookingList.forEach((el) => {
+		if (newEndDate === el.startDate) {
+			errors.endDate = "End date conflicts with an existing booking";
+			res.status(403);
+			return res.json({
+				message: "Sorry, this spot is already booked for the specified dates",
+				errors: errors,
+			});
+		}
+
+		if (isEqual(newStartDate, el.startDate)) {
+			if (isEqual(newEndDate, el.endDate)) {
+				errors.endDate = "End date conflicts with an existing booking";
+			}
+			errors.startDate = "Start date conflicts with an existing booking";
+			res.status(403);
+			return res.json({
+				message: "Sorry, this spot is already booked for the specified dates",
+				errors: errors,
+			});
+		}
+
+		if (isEqual(newStartDate, el.endDate)) {
+			errors.startDate = "Start date conflicts with an existing booking";
+			res.status(403);
+			return res.json({
+				message: "Sorry, this spot is already booked for the specified dates",
+				errors: errors,
+			});
+		}
+		if (isEqual(newEndDate, el.startDate)) {
+			errors.endDate = "End date conflicts with an existing booking";
+			res.status(403);
+			return res.json({
+				message: "Sorry, this spot is already booked for the specified dates",
+				errors: errors,
+			});
+		}
+		if (isEqual(newEndDate, el.endDate)) {
+			errors.endDate = "End date conflicts with an existing booking";
+			res.status(403);
+			return res.json({
+				message: "Sorry, this spot is already booked for the specified dates",
+				errors: errors,
+			});
+		}
+		if (
+			isBefore(newStartDate, el.endDate) &&
+			isAfter(newStartDate, el.startDate)
+		) {
+			errors.startDate = "Start date conflicts with an existing booking";
+			if (
+				isBefore(newEndDate, el.endDate) &&
+				isAfter(newEndDate, el.startDate)
+			) {
+				errors.endDate = "End date conflicts with an existing booking";
+			}
+			res.status(403);
+			return res.json({
+				message: "Sorry, this spot is already booked for the specified dates",
+				errors: errors,
+			});
+		}
+
+		if (isBefore(newEndDate, el.endDate) && isAfter(newEndDate, el.startDate)) {
+			errors.endDate = "End date conflicts with an existing booking";
+			res.status(403);
+			return res.json({
+				message: "Sorry, this spot is already booked for the specified dates",
+				errors: errors,
+			});
+		}
+
+		if (
+			areIntervalsOverlapping(
+				{
+					start: newStartDate,
+					end: newEndDate,
+				},
+				{
+					start: el.startDate,
+					end: el.endDate,
+				},
+				{ inclusive: false }
+			)
+		) {
+			errors.startDate = "Start date conflicts with an existing booking";
+			errors.endDate = "End date conflicts with an existing booking";
+			res.status(403);
+			return res.json({
+				message: "Sorry, this spot is already booked for the specified dates",
+				errors: errors,
+			});
+		}
+	});
+
+	//console.log(errors, "########################################################################################################");
+	// if (errors.startDate || errors.endDate) {
+	// 	res.status(403);
+	// 	return res.json({
+	// 		message: "Sorry, this spot is already booked for the specified dates",
+	// 		errors: errors,
+	// 	});
+	// }
+
+	//console.log(newStartDate, newEndDate, startDate, endDate);
+
+	const currBooking = await Booking.findByPk(bookingId);
+
+	await currBooking.set({
+		startDate: newStartDate,
+		endDate: newEndDate,
+	});
+
+	await currBooking.save();
+
+	return res.json(currBooking);
 });
 
-//POST booking from spot id
-router.post('/spots/:id/bookings', requireAuth, async (req, res, next) => {
-    const spotId = req.params.id;
-    const { startDate, endDate } = req.body;
-    const userId = req.user.id;
+router.delete("/:bookingId", requireAuth, async (req, res) => {
+	const userId = req.user.id;
+	const bookingId = parseInt(req.params.bookingId);
 
-    try {
-        const spot = await Spot.findByPk(spotId);
-        if (!spot) {
-            return res.status(404).json({ message: "Spot couldn't be found" });
-        }
+	const booking = await Booking.findAll({
+		where: {
+			id: bookingId,
+		},
+	});
 
-        if (spot.ownerId === userId) {
-            return res.status(403).json({ message: "Cannot book your own spot" });
-        }
+	if (!booking.length) {
+		res.status(404);
+		return res.json({
+			message: "Booking couldn't be found",
+		});
+	}
+	const bookingList = [];
 
-        //booking conflicts
+	booking.forEach((el) => {
+		bookingList.push(el.toJSON());
+	});
 
-        const newBooking = await Booking.create({ spotId, userId, startDate, endDate });
-        res.status(200).json(newBooking);
-    } catch (error) {
-        next(error);
-    }
-});
+	if (bookingList[0].userId !== userId) {
+		res.status(403);
+		return res.json({
+			message: "Forbidden",
+		});
+	}
 
-//PUT edit booking
-router.put('/bookings/:id', requireAuth, async (req, res, next) => {
-    const bookingId = req.params.id;
-    const { startDate, endDate } = req.body;
-    const userId = req.user.id;
+	if (bookingList[0].startDate <= new Date().toJSON) {
+		res.status(403);
+		return res.json({
+			message: "Bookings that have been started can't be deleted",
+		});
+	}
 
-    try {
-        const booking = await Booking.findByPk(bookingId);
-        if (!booking) {
-            return res.status(404).json({ message: "Booking couldn't be found" });
-        }
+	const currBooking = await Booking.findByPk(bookingId);
 
-        if (booking.userId !== userId) {
-            return res.status(403).json({ message: "Forbidden" });
-        }
+	await currBooking.destroy();
 
-        // booking conflicts
-
-        booking.startDate = startDate;
-        booking.endDate = endDate;
-        await booking.save();
-
-        res.status(200).json(booking);
-    } catch (error) {
-        next(error);
-    }
-});
-
-//DELETE - a booking
-router.delete('/bookings/:id', requireAuth, async (req, res, next) => {
-    const bookingId = req.params.id;
-    const userId = req.user.id; 
-
-    try {
-        const booking = await Booking.findByPk(bookingId, {
-            include: { model: Spot }
-        });
-        if (!booking) {
-            return res.status(404).json({ message: "Booking couldn't be found" });
-        }
-
-        if (booking.userId !== userId && booking.Spot.ownerId !== userId) {
-            return res.status(403).json({ message: "Forbidden" });
-        }
-
-        // Check if the booking has already started
-        const currentDate = new Date();
-        if (new Date(booking.startDate) <= currentDate) {
-            return res.status(403).json({ message: "Bookings that have been started can't be deleted" });
-        }
-
-        await booking.destroy();
-        res.status(200).json({ message: "Successfully deleted" });
-    } catch (error) {
-        next(error);
-    }
+	res.json({
+		message: "Successfully deleted",
+	});
 });
 
 module.exports = router;
